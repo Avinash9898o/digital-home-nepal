@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { AssistantView } from './components/AssistantView';
 import { BillsView } from './components/BillsView';
 import { CalendarView } from './components/CalendarView';
 import { DashboardView } from './components/DashboardView';
@@ -34,6 +35,7 @@ const DigitalHomeShell: React.FC = () => {
     <>
       <Layout>
         {activeSection === 'dashboard' && <DashboardView />}
+        {activeSection === 'assistant' && <AssistantView />}
         {activeSection === 'finance' && <FinanceView />}
         {activeSection === 'bills' && <BillsView />}
         {activeSection === 'shopping' && <ShoppingView />}

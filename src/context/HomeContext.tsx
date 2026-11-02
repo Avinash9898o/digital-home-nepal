@@ -1,6 +1,17 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { createEmptyHouseholdData, createNepaliDemoData } from '../data/demoData';
-import { getTodayISO, t } from '../i18n/translations';
+import {
+  createEmptyHouseholdData,
+  createNepaliDemoData,
+  DEFAULT_DEMO_CATEGORY_BUDGETS,
+  DEFAULT_DEVELOPER_NAME,
+} from '../data/demoData';
+import {
+  FINANCE_CATEGORY_LABELS,
+  formatCurrency,
+  formatMonthYear,
+  getTodayISO,
+  t,
+} from '../i18n/translations';
 import {
   AppData,
   BillItem,
@@ -8,6 +19,7 @@ import {
   CurrencyCode,
   FamilyMember,
   FamilyTask,
+  FinanceCategory,
   FinanceRecord,
   HouseholdSettings,
   Language,
@@ -49,15 +61,18 @@ interface HomeContextValue {
     householdName: string,
     language: Language,
     currency: CurrencyCode,
-    monthlyBudget: number
+    monthlyBudget: number,
+    developerName?: string
   ) => void;
   completeOnboardingClean: (
     householdName: string,
     language: Language,
     currency: CurrencyCode,
-    monthlyBudget: number
+    monthlyBudget: number,
+    developerName?: string
   ) => void;
   updateSettings: (partial: Partial<HouseholdSettings>) => void;
+  updateCategoryBudgets: (budgets: Partial<Record<FinanceCategory, number>>) => void;
   toggleLanguage: () => void;
   toggleTheme: () => void;
 
@@ -130,6 +145,14 @@ function getInitialData(): AppData {
     if (raw) {
       const parsed = JSON.parse(raw) as AppData;
       if (parsed && parsed.settings && Array.isArray(parsed.finances)) {
+        if (parsed.settings.categoryBudgets === undefined) {
+          parsed.settings.categoryBudgets = parsed.settings.hasDemoData
+            ? { ...DEFAULT_DEMO_CATEGORY_BUDGETS }
+            : {};
+        }
+        if (!parsed.settings.developerName || !parsed.settings.developerName.trim()) {
+          parsed.settings.developerName = DEFAULT_DEVELOPER_NAME;
+        }
         return parsed;
       }
     }
@@ -198,10 +221,11 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToast = useCallback((message: string, type: ToastMessage['type'] = 'success') => {
     const id = makeId('toast');
-    setToasts((prev) => [...prev.slice(-3), { id, type, message }]);
+    setToasts((prev) => [...prev.slice(-4), { id, type, message }]);
+    const duration = type === 'warning' || type === 'error' ? 5800 : 3600;
     setTimeout(() => {
       setToasts((prev) => prev.filter((item) => item.id !== id));
-    }, 3600);
+    }, duration);
   }, []);
 
   const dismissToast = useCallback((id: string) => {
@@ -220,14 +244,16 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     householdName: string,
     language: Language,
     currency: CurrencyCode,
-    monthlyBudget: number
+    monthlyBudget: number,
+    developerName?: string
   ) => {
     const demo = createNepaliDemoData(
       householdName.trim() || (language === 'ne' ? 'शर्मा परिवार' : 'Sharma Family'),
       language,
       currency,
       data.settings.theme,
-      monthlyBudget > 0 ? monthlyBudget : 85000
+      monthlyBudget > 0 ? monthlyBudget : 85000,
+      developerName || data.settings.developerName || DEFAULT_DEVELOPER_NAME
     );
     setData(demo);
     setActiveSection('dashboard');
@@ -245,14 +271,16 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     householdName: string,
     language: Language,
     currency: CurrencyCode,
-    monthlyBudget: number
+    monthlyBudget: number,
+    developerName?: string
   ) => {
     const clean = createEmptyHouseholdData(
       householdName,
       language,
       currency,
       data.settings.theme,
-      monthlyBudget
+      monthlyBudget,
+      developerName || data.settings.developerName || DEFAULT_DEVELOPER_NAME
     );
     setData(clean);
     setActiveSection('dashboard');
@@ -266,11 +294,168 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const checkAndNotifyBudgetThreshold = useCallback(
+    (
+      financesList: FinanceRecord[],
+      targetYearMonth: string,
+      budgetAmount: number,
+      langCode: Language,
+      currencyCode: CurrencyCode
+    ) => {
+      if (!targetYearMonth || budgetAmount <= 0) return;
+      const monthTotalExpense = financesList
+        .filter((f) => f.type === 'expense' && f.date.startsWith(targetYearMonth))
+        .reduce((sum, f) => sum + f.amount, 0);
+
+      if (monthTotalExpense > budgetAmount * 0.8) {
+        const rawPct = (monthTotalExpense / budgetAmount) * 100;
+        const pctLabel =
+          Math.round(rawPct) <= 80 ? rawPct.toFixed(1) : String(Math.round(rawPct));
+        const monthLabel = formatMonthYear(targetYearMonth, langCode);
+
+        if (monthTotalExpense > budgetAmount) {
+          const overBy = monthTotalExpense - budgetAmount;
+          addToast(
+            t(
+              langCode,
+              `बजेट चेतावनी (${monthLabel}): मासिक खर्च ${pctLabel}% पुग्यो र बजेट सीमा ${formatCurrency(overBy, currencyCode)} ले नाघ्यो!`,
+              `Budget Alert (${monthLabel}): Monthly expenses hit ${pctLabel}%, exceeding your household budget by ${formatCurrency(overBy, currencyCode)}!`
+            ),
+            'error'
+          );
+        } else {
+          const remaining = budgetAmount - monthTotalExpense;
+          addToast(
+            t(
+              langCode,
+              `बजेट सावधानी (${monthLabel}): मासिक बजेटको ${pctLabel}% खर्च भइसकेको छ (${formatCurrency(remaining, currencyCode)} बाँकी)।`,
+              `Budget Warning (${monthLabel}): Monthly expenses exceeded 80% of budget (${pctLabel}% used · ${formatCurrency(remaining, currencyCode)} left).`
+            ),
+            'warning'
+          );
+        }
+      }
+    },
+    [addToast]
+  );
+
+  const checkAndNotifyCategoryBudget = useCallback(
+    (
+      financesList: FinanceRecord[],
+      targetYearMonth: string,
+      category: FinanceCategory,
+      categoryBudgets: Partial<Record<FinanceCategory, number>> | undefined,
+      langCode: Language,
+      currencyCode: CurrencyCode
+    ) => {
+      const limit = categoryBudgets?.[category];
+      if (!targetYearMonth || !limit || limit <= 0) return;
+
+      const catSpent = financesList
+        .filter(
+          (f) =>
+            f.type === 'expense' &&
+            f.category === category &&
+            f.date.startsWith(targetYearMonth)
+        )
+        .reduce((sum, f) => sum + f.amount, 0);
+
+      // Alert when monthly category spending nears (>= 80%) or exceeds (> 100%) its set limit
+      if (catSpent >= limit * 0.8) {
+        const rawPct = (catSpent / limit) * 100;
+        const pctLabel =
+          rawPct > 80 && Math.round(rawPct) <= 80
+            ? rawPct.toFixed(1)
+            : String(Math.round(rawPct));
+        const catName = FINANCE_CATEGORY_LABELS[category][langCode];
+        const monthLabel = formatMonthYear(targetYearMonth, langCode);
+
+        if (catSpent > limit) {
+          const overBy = catSpent - limit;
+          addToast(
+            t(
+              langCode,
+              `विधा बजेट नाघ्यो (${catName} · ${monthLabel}): ${pctLabel}% खर्च भई तोकिएको सीमा ${formatCurrency(overBy, currencyCode)} ले नाघ्यो!`,
+              `Category Limit Exceeded (${catName} · ${monthLabel}): Hit ${pctLabel}% of limit, over by ${formatCurrency(overBy, currencyCode)}!`
+            ),
+            'error'
+          );
+        } else {
+          const left = limit - catSpent;
+          addToast(
+            t(
+              langCode,
+              `विधा बजेट सीमा नजिक (${catName} · ${monthLabel}): सीमाको ${pctLabel}% खर्च भयो (${formatCurrency(left, currencyCode)} मात्र बाँकी)।`,
+              `Nearing Category Limit (${catName} · ${monthLabel}): ${pctLabel}% of ${formatCurrency(limit, currencyCode)} limit used (${formatCurrency(left, currencyCode)} left).`
+            ),
+            'warning'
+          );
+        }
+      }
+    },
+    [addToast]
+  );
+
   const updateSettings = (partial: Partial<HouseholdSettings>) => {
+    const nextSettings = { ...data.settings, ...partial };
     setData((prev) => ({
       ...prev,
       settings: { ...prev.settings, ...partial },
     }));
+    if (
+      typeof partial.monthlyBudget === 'number' &&
+      partial.monthlyBudget !== data.settings.monthlyBudget
+    ) {
+      checkAndNotifyBudgetThreshold(
+        data.finances,
+        getTodayISO().slice(0, 7),
+        partial.monthlyBudget,
+        nextSettings.language,
+        nextSettings.currency
+      );
+    }
+  };
+
+  const updateCategoryBudgets = (budgets: Partial<Record<FinanceCategory, number>>) => {
+    const cleaned: Partial<Record<FinanceCategory, number>> = {};
+    (Object.keys(budgets) as FinanceCategory[]).forEach((cat) => {
+      const val = Number(budgets[cat]);
+      if (!Number.isNaN(val) && val > 0) {
+        cleaned[cat] = val;
+      }
+    });
+
+    const prevBudgets = data.settings.categoryBudgets || {};
+    setData((prev) => ({
+      ...prev,
+      settings: {
+        ...prev.settings,
+        categoryBudgets: cleaned,
+      },
+    }));
+
+    addToast(
+      t(
+        lang,
+        'विधागत मासिक बजेट सीमा सुरक्षित गरियो।',
+        'Category monthly budget limits saved.'
+      ),
+      'success'
+    );
+
+    const currentYm = getTodayISO().slice(0, 7);
+    (Object.keys(cleaned) as FinanceCategory[]).forEach((cat) => {
+      if (cleaned[cat] !== prevBudgets[cat]) {
+        checkAndNotifyCategoryBudget(
+          data.finances,
+          currentYm,
+          cat,
+          cleaned,
+          lang,
+          data.settings.currency
+        );
+      }
+    });
   };
 
   const toggleLanguage = () => {
@@ -355,7 +540,8 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       data.settings.language,
       data.settings.currency,
       data.settings.theme,
-      data.settings.monthlyBudget
+      data.settings.monthlyBudget,
+      data.settings.developerName || DEFAULT_DEVELOPER_NAME
     );
     setData(fresh);
     addToast(
@@ -370,7 +556,8 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       data.settings.language,
       data.settings.currency,
       data.settings.theme,
-      data.settings.monthlyBudget
+      data.settings.monthlyBudget,
+      data.settings.developerName || DEFAULT_DEVELOPER_NAME
     );
     setData(clean);
     addToast(
@@ -488,15 +675,37 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: getTodayISO(),
       isDemo: false,
     };
+    const nextFinances = [newRec, ...data.finances];
     setData((prev) => ({ ...prev, finances: [newRec, ...prev.finances] }));
     addToast(
       record.type === 'income'
         ? t(lang, 'आम्दानी विवरण थपियो।', 'Income record saved.')
         : t(lang, 'खर्च विवरण थपियो।', 'Expense record saved.')
     );
+    if (record.type === 'expense') {
+      const ym = record.date.slice(0, 7);
+      checkAndNotifyCategoryBudget(
+        nextFinances,
+        ym,
+        record.category,
+        data.settings.categoryBudgets,
+        lang,
+        data.settings.currency
+      );
+      checkAndNotifyBudgetThreshold(
+        nextFinances,
+        ym,
+        data.settings.monthlyBudget,
+        lang,
+        data.settings.currency
+      );
+    }
   };
 
   const updateFinance = (id: string, record: Omit<FinanceRecord, 'id' | 'createdAt'>) => {
+    const nextFinances = data.finances.map((f) =>
+      f.id === id ? { ...f, ...record, isDemo: false } : f
+    );
     setData((prev) => ({
       ...prev,
       finances: prev.finances.map((f) =>
@@ -504,6 +713,24 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ),
     }));
     addToast(t(lang, 'आर्थिक विवरण अद्यावधिक भयो।', 'Finance record updated.'));
+    if (record.type === 'expense') {
+      const ym = record.date.slice(0, 7);
+      checkAndNotifyCategoryBudget(
+        nextFinances,
+        ym,
+        record.category,
+        data.settings.categoryBudgets,
+        lang,
+        data.settings.currency
+      );
+      checkAndNotifyBudgetThreshold(
+        nextFinances,
+        ym,
+        data.settings.monthlyBudget,
+        lang,
+        data.settings.currency
+      );
+    }
   };
 
   const deleteFinance = (id: string) => {
@@ -626,6 +853,40 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? t(lang, 'बिल भुक्तानी भयो र खर्चमा पनि जोडियो!', 'Bill marked paid & logged in expenses!')
         : t(lang, 'बिल भुक्तानी सम्पन्न भयो!', 'Bill marked as paid!')
     );
+
+    if (alsoRecordExpense) {
+      const simulatedFinances: FinanceRecord[] = [
+        {
+          id: 'temp-bill-exp',
+          title: `${targetBill.billName} (${targetBill.provider})`,
+          amount: targetBill.amount,
+          type: 'expense',
+          category: categoryMap[targetBill.category],
+          date: paidDate,
+          paymentMethod,
+          note: note || '',
+          createdAt: getTodayISO(),
+        },
+        ...data.finances,
+      ];
+      const mappedCat = categoryMap[targetBill.category];
+      const ym = paidDate.slice(0, 7);
+      checkAndNotifyCategoryBudget(
+        simulatedFinances,
+        ym,
+        mappedCat,
+        data.settings.categoryBudgets,
+        lang,
+        data.settings.currency
+      );
+      checkAndNotifyBudgetThreshold(
+        simulatedFinances,
+        ym,
+        data.settings.monthlyBudget,
+        lang,
+        data.settings.currency
+      );
+    }
   };
 
   const markBillUnpaid = (id: string) => {
@@ -870,6 +1131,7 @@ export const HomeProvider: React.FC<{ children: React.ReactNode }> = ({ children
         completeOnboardingWithDemo,
         completeOnboardingClean,
         updateSettings,
+        updateCategoryBudgets,
         toggleLanguage,
         toggleTheme,
         removeDemoDataOnly,

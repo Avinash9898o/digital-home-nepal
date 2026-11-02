@@ -4,6 +4,7 @@ export type ThemeMode = 'light' | 'dark';
 
 export type NavSection =
   | 'dashboard'
+  | 'assistant'
   | 'finance'
   | 'bills'
   | 'shopping'
@@ -181,7 +182,9 @@ export interface MaintenanceRecord {
 
 export interface HouseholdSettings {
   householdName: string;
+  developerName?: string;
   monthlyBudget: number;
+  categoryBudgets?: Partial<Record<FinanceCategory, number>>;
   language: Language;
   currency: CurrencyCode;
   theme: ThemeMode;

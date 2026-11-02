@@ -1,9 +1,23 @@
 import {
   AppData,
   CurrencyCode,
+  FinanceCategory,
   Language,
   ThemeMode,
 } from '../types';
+
+export const DEFAULT_DEVELOPER_NAME = 'amihacker1xyz';
+
+export const DEFAULT_DEMO_CATEGORY_BUDGETS: Partial<Record<FinanceCategory, number>> = {
+  Food: 22000,
+  Education: 20000,
+  Shopping: 10000,
+  Transport: 5000,
+  Health: 6000,
+  Electricity: 3500,
+  Internet: 2000,
+  Water: 1000,
+};
 
 function offsetDate(daysOffset: number): string {
   const d = new Date();
@@ -30,7 +44,8 @@ export function createNepaliDemoData(
   language: Language = 'ne',
   currency: CurrencyCode = 'NPR',
   theme: ThemeMode = 'light',
-  monthlyBudget = 85000
+  monthlyBudget = 85000,
+  developerName = DEFAULT_DEVELOPER_NAME
 ): AppData {
   const members = [
     {
@@ -617,7 +632,9 @@ export function createNepaliDemoData(
     schemaVersion: 1,
     settings: {
       householdName,
+      developerName: developerName.trim() || DEFAULT_DEVELOPER_NAME,
       monthlyBudget,
+      categoryBudgets: { ...DEFAULT_DEMO_CATEGORY_BUDGETS },
       language,
       currency,
       theme,
@@ -639,13 +656,16 @@ export function createEmptyHouseholdData(
   language: Language = 'ne',
   currency: CurrencyCode = 'NPR',
   theme: ThemeMode = 'light',
-  monthlyBudget = 60000
+  monthlyBudget = 60000,
+  developerName = DEFAULT_DEVELOPER_NAME
 ): AppData {
   return {
     schemaVersion: 1,
     settings: {
       householdName: householdName.trim() || (language === 'ne' ? 'हाम्रो घर' : 'Our Home'),
+      developerName: developerName.trim() || DEFAULT_DEVELOPER_NAME,
       monthlyBudget: monthlyBudget > 0 ? monthlyBudget : 60000,
+      categoryBudgets: {},
       language,
       currency,
       theme,

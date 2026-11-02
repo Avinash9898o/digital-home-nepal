@@ -128,6 +128,7 @@ export function getRelativeDueText(isoDate: string, lang: Language): string {
 
 export const NAV_LABELS: Record<NavSection, { ne: string; en: string; shortNe: string; shortEn: string }> = {
   dashboard: { ne: 'गृहपृष्ठ', en: 'Dashboard', shortNe: 'गृहपृष्ठ', shortEn: 'Home' },
+  assistant: { ne: 'सहायता र AI सहायक', en: 'Help & AI Assistance', shortNe: 'सहायता AI', shortEn: 'Help · AI' },
   finance: { ne: 'घरको खर्च', en: 'Home Finance', shortNe: 'खर्च', shortEn: 'Finance' },
   bills: { ne: 'बिल तथा रिमाइन्डर', en: 'Bills & Reminders', shortNe: 'बिल', shortEn: 'Bills' },
   shopping: { ne: 'किनमेल सूची', en: 'Shopping', shortNe: 'किनमेल', shortEn: 'Shopping' },

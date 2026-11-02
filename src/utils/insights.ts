@@ -89,14 +89,18 @@ export function generateLocalHouseholdInsights(
         targetSection: 'finance',
         actionLabel: lang === 'ne' ? 'खर्च विश्लेषण' : 'Inspect Spending',
       });
-    } else if (pct >= 80) {
+    } else if (totalMonthExpense > monthlyBudget * 0.8) {
+      const exactPct =
+        pct <= 80
+          ? ((totalMonthExpense / monthlyBudget) * 100).toFixed(1)
+          : String(pct);
       insights.push({
         id: 'ins-budget-near',
         severity: 'warning',
         title:
           lang === 'ne'
-            ? `मासिक बजेटको ${pct}% खर्च भइसकेको छ`
-            : `${pct}% of monthly household budget used`,
+            ? `मासिक बजेटको ${exactPct}% खर्च भइसकेको छ (८०% सीमा पार)`
+            : `Monthly expenses exceeded 80% (${exactPct}% of budget used)`,
         suggestion:
           lang === 'ne'
             ? `अब यस महिनाका लागि ${formatCurrency(monthlyBudget - totalMonthExpense, currency)} मात्र बाँकी छ। दैनिक खर्चमा ध्यान दिनुहोला।`

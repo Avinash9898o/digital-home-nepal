@@ -7,9 +7,11 @@ import {
   Circle,
   Clock,
   CreditCard,
+  HelpCircle,
   Lightbulb,
   Plus,
   ShoppingBag,
+  Sparkles,
   TrendingDown,
   TrendingUp,
   Users,
@@ -29,6 +31,7 @@ import {
   t,
 } from '../i18n/translations';
 import { generateLocalHouseholdInsights } from '../utils/insights';
+import nepaliSmartHomeClear from '../assets/images/nepali_smart_home_clear_1793619332675.jpg';
 
 export const DashboardView: React.FC = () => {
   const {
@@ -107,138 +110,171 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Personalized Welcome + Quick Actions */}
-      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-              {t(
-                lang,
-                `नमस्ते · ${formatDateReadable(todayISO, lang)}`,
-                `Namaste · ${formatDateReadable(todayISO, lang)}`
-              )}
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white [text-wrap:balance]">
-              {t(
-                lang,
-                `${data.settings.householdName} को डिजिटल गृहपृष्ठ`,
-                `Welcome home, ${data.settings.householdName}`
-              )}
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="inline-flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-slate-400" />
-                <span className="tabular-nums">
-                  {data.members.length} {t(lang, 'सदस्यहरू', 'family members')}
+      {/* Personalized Welcome Hero: Split Layout with Dedicated Unobstructed Image (Zero Overlay) */}
+      <section className="vibe-hero-surface relative overflow-hidden rounded-2xl border border-emerald-900/30 dark:border-emerald-800/40 p-6 sm:p-8 text-white shadow-sm">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          {/* Left 7 Columns: Greeting, Quick Actions & Family Members */}
+          <div className="lg:col-span-7 space-y-5">
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold tracking-wide text-amber-300">
+                {t(
+                  lang,
+                  `नमस्ते · ${formatDateReadable(todayISO, lang)}`,
+                  `Namaste · ${formatDateReadable(todayISO, lang)}`
+                )}
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white [text-wrap:balance]">
+                {t(
+                  lang,
+                  `${data.settings.householdName} को डिजिटल गृहपृष्ठ`,
+                  `Welcome home, ${data.settings.householdName}`
+                )}
+              </h2>
+              <p className="text-sm text-emerald-100/85 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="inline-flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-emerald-300" />
+                  <span className="tabular-nums">
+                    {data.members.length} {t(lang, 'सदस्यहरू', 'family members')}
+                  </span>
                 </span>
-              </span>
-              <span aria-hidden="true">·</span>
-              <span className="tabular-nums">
-                {pendingBills.length} {t(lang, 'बाँकी बिल', 'pending bills')}
-              </span>
-              <span aria-hidden="true">·</span>
-              <span className="tabular-nums">
-                {activeTasks.length} {t(lang, 'सक्रिय काम', 'active tasks')}
-              </span>
-            </p>
-          </div>
+                <span aria-hidden="true">·</span>
+                <span className="tabular-nums">
+                  {pendingBills.length} {t(lang, 'बाँकी बिल', 'pending bills')}
+                </span>
+                <span aria-hidden="true">·</span>
+                <span className="tabular-nums">
+                  {activeTasks.length} {t(lang, 'सक्रिय काम', 'active tasks')}
+                </span>
+              </p>
+            </div>
 
-          {/* Quick Actions Bar */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setQuickModal('expense')}
-              className="min-h-[42px] px-3.5 py-2 rounded-lg bg-slate-900 dark:bg-emerald-600 hover:opacity-90 text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-opacity whitespace-nowrap cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{t(lang, 'खर्च थप्नुहोस्', 'Add Expense')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setQuickModal('bill')}
-              className="min-h-[42px] px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-stone-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
-            >
-              <CreditCard className="w-4 h-4 text-slate-500" />
-              <span>{t(lang, 'बिल', 'Add Bill')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setQuickModal('task')}
-              className="min-h-[42px] px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-stone-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
-            >
-              <CheckCircle2 className="w-4 h-4 text-slate-500" />
-              <span>{t(lang, 'काम', 'Add Task')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setQuickModal('shopping')}
-              className="min-h-[42px] px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-stone-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
-            >
-              <ShoppingBag className="w-4 h-4 text-slate-500" />
-              <span>{t(lang, 'किनमेल', 'Shopping')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setQuickModal('event')}
-              className="min-h-[42px] px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-stone-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
-            >
-              <CalendarDays className="w-4 h-4 text-slate-500" />
-              <span>{t(lang, 'कार्यक्रम', 'Event')}</span>
-            </button>
-          </div>
-        </div>
+            {/* Quick Actions Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setQuickModal('expense')}
+                className="min-h-[42px] px-4 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer shadow-xs"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t(lang, 'खर्च थप्नुहोस्', 'Add Expense')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSection('assistant')}
+                className="min-h-[42px] px-3.5 py-2 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/45 text-amber-200 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <HelpCircle className="w-4 h-4 text-amber-300" />
+                <span>{t(lang, 'सहायता · AI सहायक', 'Help · AI Assistance')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickModal('bill')}
+                className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <CreditCard className="w-4 h-4 text-emerald-200" />
+                <span>{t(lang, 'बिल', 'Add Bill')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickModal('task')}
+                className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                <span>{t(lang, 'काम', 'Add Task')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickModal('shopping')}
+                className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <ShoppingBag className="w-4 h-4 text-emerald-200" />
+                <span>{t(lang, 'किनमेल', 'Shopping')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickModal('event')}
+                className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <CalendarDays className="w-4 h-4 text-emerald-200" />
+                <span>{t(lang, 'कार्यक्रम', 'Event')}</span>
+              </button>
+            </div>
 
-        {/* Family Member Avatars Strip */}
-        <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-4">
-            {data.members.map((member) => (
-              <div key={member.id} className="flex items-center gap-2.5">
-                <div
-                  className="w-8 h-8 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: member.avatarColor }}
-                >
-                  {member.name.slice(0, 1)}
-                </div>
-                <div className="text-xs">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200">
-                    {member.name}
+            {/* Family Member Avatars Strip */}
+            <div className="pt-4 border-t border-white/15 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                {data.members.map((member) => (
+                  <div key={member.id} className="flex items-center gap-2.5">
+                    <div
+                      className="w-8 h-8 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0 ring-2 ring-white/20"
+                      style={{ backgroundColor: member.avatarColor }}
+                    >
+                      {member.name.slice(0, 1)}
+                    </div>
+                    <div className="text-xs">
+                      <div className="font-semibold text-white">
+                        {member.name}
+                      </div>
+                      <div className="text-emerald-100/75">{member.role}</div>
+                    </div>
                   </div>
-                  <div className="text-slate-500 dark:text-slate-400">{member.role}</div>
-                </div>
+                ))}
               </div>
-            ))}
+              <button
+                type="button"
+                onClick={() => setActiveSection('settings')}
+                className="text-xs font-semibold text-amber-300 hover:text-amber-200 hover:underline whitespace-nowrap cursor-pointer"
+              >
+                {t(lang, 'सदस्य व्यवस्थापन →', 'Manage Members →')}
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setActiveSection('settings')}
-            className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline whitespace-nowrap cursor-pointer"
-          >
-            {t(lang, 'सदस्य व्यवस्थापन →', 'Manage Members →')}
-          </button>
+
+          {/* Right 5 Columns: Dedicated Crystal-Clear Showcase Photograph — ZERO Overlay */}
+          <div className="lg:col-span-5">
+            <div className="w-full aspect-[16/9] rounded-xl overflow-hidden border border-white/20 shadow-sm bg-slate-900">
+              <img
+                src={nepaliSmartHomeClear}
+                alt={t(
+                  lang,
+                  'हिमाली दृश्यसहितको उज्यालो र सुन्दर नेपाली पारिवारिक घर',
+                  'Bright sunlit Nepali family home courtyard overlooking snow-capped Himalayan peaks'
+                )}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover object-center"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Primary KPI Strip */}
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-5 space-y-2 shadow-2xs">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
             <span>{t(lang, 'मासिक घर बजेट', 'Monthly Budget')}</span>
-            <Wallet className="w-4 h-4 text-slate-400" />
+            <span className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+              <Wallet className="w-4 h-4" />
+            </span>
           </div>
           <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">
             {formatCurrency(monthlyBudget, currency)}
           </div>
           <div className="space-y-1.5 pt-1">
-            <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            <div className="relative h-2 w-full rounded-full bg-stone-100 dark:bg-slate-800 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
                   isOverBudget
-                    ? 'bg-rose-600'
+                    ? 'bg-gradient-to-r from-rose-600 to-red-500'
                     : budgetPct >= 80
-                      ? 'bg-amber-500'
-                      : 'bg-emerald-600'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                      : 'bg-gradient-to-r from-emerald-600 to-teal-500'
                 }`}
                 style={{ width: `${budgetPct}%` }}
+              />
+              <span
+                aria-hidden="true"
+                className="absolute top-0 bottom-0 left-[80%] w-0.5 bg-slate-900/25 dark:bg-white/30"
               />
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
@@ -251,10 +287,12 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-5 space-y-2 shadow-2xs">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
             <span>{t(lang, 'यस महिनाको खर्च', 'Expenses This Month')}</span>
-            <TrendingDown className="w-4 h-4 text-rose-500" />
+            <span className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+              <TrendingDown className="w-4 h-4" />
+            </span>
           </div>
           <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">
             {formatCurrency(monthExpense, currency)}
@@ -265,16 +303,22 @@ export const DashboardView: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-5 space-y-2 shadow-2xs">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
             <span>
               {isOverBudget
                 ? t(lang, 'बजेट नाघेको रकम', 'Over Budget By')
                 : t(lang, 'बाँकी मासिक बजेट', 'Remaining Budget')}
             </span>
-            <TrendingUp
-              className={`w-4 h-4 ${isOverBudget ? 'text-rose-600' : 'text-emerald-600'}`}
-            />
+            <span
+              className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                isOverBudget
+                  ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
+                  : 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-400'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4" />
+            </span>
           </div>
           <div
             className={`text-2xl font-bold font-mono tabular-nums ${
@@ -292,10 +336,12 @@ export const DashboardView: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-5 space-y-2 shadow-2xs">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
             <span>{t(lang, 'तिर्न बाँकी बिलहरू', 'Pending Bills')}</span>
-            <CreditCard className="w-4 h-4 text-amber-500" />
+            <span className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <CreditCard className="w-4 h-4" />
+            </span>
           </div>
           <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">
             {formatCurrency(pendingBillsTotal, currency)}
@@ -311,29 +357,38 @@ export const DashboardView: React.FC = () => {
         </div>
       </section>
 
-      {/* Smart Family Assistant (Local Data-Driven Insights) */}
-      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+      {/* Smart Family Assistant (Local Data-Driven Insights + AI Advisor Link) */}
+      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-6 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-stone-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-950/60 dark:to-amber-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/60 dark:border-emerald-800/50">
               <Lightbulb className="w-4 h-4" />
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                {t(lang, 'स्मार्ट पारिवारिक सहायक (सुझावहरू)', 'Smart Family Assistant')}
+                {t(lang, 'स्मार्ट पारिवारिक सहायक (सुझावहरू)', 'Smart Family Insights')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {t(
                   lang,
-                  'तपाईंको सुरक्षित घरायसी डाटाको स्थानीय विश्लेषणमा आधारित व्यावहारिक सुझावहरू',
-                  'Practical insights calculated locally from your saved household records'
+                  'तपाईंको घरायसी डाटाको विश्लेषण र AI पारिवारिक सल्लाहकार',
+                  'Instant local household checks plus conversational AI coaching'
                 )}
               </p>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setActiveSection('assistant')}
+            className="self-start sm:self-auto min-h-[38px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+            <span>{t(lang, 'AI सल्लाहकार खोल्नुहोस् →', 'Open AI Assistant →')}</span>
+          </button>
         </div>
 
-        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+        <div className="divide-y divide-stone-100 dark:divide-slate-800">
           {insights.slice(0, 4).map((ins) => (
             <div
               key={ins.id}
@@ -375,9 +430,9 @@ export const DashboardView: React.FC = () => {
       {/* Two-Column Grid: Pending Bills & Family Tasks */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pending Bills */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between">
+        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-6 flex flex-col justify-between shadow-2xs">
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-100 dark:border-slate-800">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 {t(lang, 'आगामी तथा बाँकी बिलहरू', 'Pending & Overdue Bills')}
               </h3>
@@ -404,7 +459,7 @@ export const DashboardView: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-stone-100 dark:divide-slate-800">
                 {pendingBills.slice(0, 4).map((bill) => {
                   const isLate = diffDaysFromToday(bill.dueDate) < 0;
                   return (
@@ -453,9 +508,9 @@ export const DashboardView: React.FC = () => {
         </section>
 
         {/* Today's & Priority Family Tasks */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between">
+        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-6 flex flex-col justify-between shadow-2xs">
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-100 dark:border-slate-800">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {t(lang, 'परिवारका आजका र बाँकी काम', "Family Tasks & Today's Chores")}
@@ -488,7 +543,7 @@ export const DashboardView: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-stone-100 dark:divide-slate-800">
                 {activeTasks.slice(0, 4).map((task) => {
                   const isDueTodayOrPast = diffDaysFromToday(task.dueDate) <= 0;
                   return (
@@ -538,8 +593,8 @@ export const DashboardView: React.FC = () => {
       {/* Three-Column Row: Upcoming Events, Shopping Reminders & Maintenance, Recent Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upcoming Birthdays & Events */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-6 shadow-2xs">
+          <div className="flex items-center justify-between pb-4 border-b border-stone-100 dark:border-slate-800">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               {t(lang, 'आगामी जन्मदिन र कार्यक्रम', 'Upcoming Events')}
             </h3>
@@ -556,7 +611,7 @@ export const DashboardView: React.FC = () => {
               {t(lang, 'आगामी कार्यक्रमहरू छैनन्।', 'No upcoming events scheduled.')}
             </p>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-stone-100 dark:divide-slate-800">
               {upcomingEvents.map((ev) => (
                 <div key={ev.id} className="py-3 space-y-0.5">
                   <div className="text-sm font-semibold text-slate-900 dark:text-white">
@@ -578,9 +633,9 @@ export const DashboardView: React.FC = () => {
         </section>
 
         {/* Shopping & Home Maintenance Reminders */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-5">
+        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-6 space-y-5 shadow-2xs">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-slate-800">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 {t(lang, 'किनमेल र मर्मत सम्झना', 'Shopping & Maintenance')}
               </h3>
@@ -619,7 +674,7 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="pt-4 border-t border-stone-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <Wrench className="w-3.5 h-3.5 text-slate-400" />
@@ -654,8 +709,8 @@ export const DashboardView: React.FC = () => {
         </section>
 
         {/* Recent Financial Activity */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+        <section className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-6 shadow-2xs">
+          <div className="flex items-center justify-between pb-4 border-b border-stone-100 dark:border-slate-800">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               {t(lang, 'हालैका कारोबारहरू', 'Recent Activity')}
             </h3>
@@ -672,7 +727,7 @@ export const DashboardView: React.FC = () => {
               {t(lang, 'कुनै आम्दानी वा खर्च दर्ता भएको छैन।', 'No transactions logged yet.')}
             </p>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-stone-100 dark:divide-slate-800">
               {recentFinances.map((rec) => (
                 <div
                   key={rec.id}

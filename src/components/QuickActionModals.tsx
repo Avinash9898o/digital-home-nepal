@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, BellRing, CheckCircle2, Info, X } from 'lucide-react';
 import { useHome } from '../context/HomeContext';
 import {
   BILL_CATEGORY_LABELS,
   CURRENCY_META,
   EVENT_CATEGORY_LABELS,
   FINANCE_CATEGORY_LABELS,
+  formatCurrency,
+  formatMonthYear,
   getTodayISO,
   MAINTENANCE_CATEGORY_LABELS,
   PAYMENT_METHOD_LABELS,
@@ -91,6 +93,64 @@ export const GlobalOverlays: React.FC = () => {
       setFormErr('');
     }
   }, [quickModal, data.shoppingLists, data.members, lang]);
+
+  const quickExpenseProjection = useMemo(() => {
+    const budget = data.settings.monthlyBudget;
+    if (quickModal !== 'expense' || budget <= 0) return null;
+    const entered = Number(amount);
+    if (!amount || Number.isNaN(entered) || entered <= 0) return null;
+    const targetYm = (date || getTodayISO()).slice(0, 7);
+    const existingMonthExp = data.finances
+      .filter((f) => f.type === 'expense' && f.date.startsWith(targetYm))
+      .reduce((s, f) => s + f.amount, 0);
+    const projectedTotal = existingMonthExp + entered;
+    if (projectedTotal <= budget * 0.8) return null;
+    const rawPct = (projectedTotal / budget) * 100;
+    const pctText =
+      Math.round(rawPct) <= 80 ? rawPct.toFixed(1) : String(Math.round(rawPct));
+    return {
+      targetYm,
+      projectedTotal,
+      pctText,
+      isOverBudget: projectedTotal > budget,
+      diff: Math.abs(budget - projectedTotal),
+    };
+  }, [quickModal, amount, date, data.finances, data.settings.monthlyBudget]);
+
+  const quickCategoryProjection = useMemo(() => {
+    if (quickModal !== 'expense') return null;
+    const catLimit = data.settings.categoryBudgets?.[finCat];
+    if (!catLimit || catLimit <= 0) return null;
+    const entered = Number(amount);
+    if (!amount || Number.isNaN(entered) || entered <= 0) return null;
+    const targetYm = (date || getTodayISO()).slice(0, 7);
+    const existingCatExp = data.finances
+      .filter(
+        (f) =>
+          f.type === 'expense' &&
+          f.category === finCat &&
+          f.date.startsWith(targetYm)
+      )
+      .reduce((s, f) => s + f.amount, 0);
+    const projectedSpent = existingCatExp + entered;
+    if (projectedSpent < catLimit * 0.8) return null;
+    const rawPct = (projectedSpent / catLimit) * 100;
+    const pctText =
+      rawPct < 100 && Math.round(rawPct) === 100
+        ? rawPct.toFixed(1)
+        : rawPct > 80 && Math.round(rawPct) <= 80
+          ? rawPct.toFixed(1)
+          : String(Math.round(rawPct));
+    return {
+      category: finCat,
+      targetYm,
+      catLimit,
+      projectedSpent,
+      pctText,
+      isExceeded: projectedSpent > catLimit,
+      diff: Math.abs(catLimit - projectedSpent),
+    };
+  }, [quickModal, finCat, amount, date, data.finances, data.settings.categoryBudgets]);
 
   const handleQuickSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,6 +333,31 @@ export const GlobalOverlays: React.FC = () => {
                       />
                     </div>
                   </div>
+                  {quickExpenseProjection && (
+                    <div
+                      role="status"
+                      className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed tabular-nums ${
+                        quickExpenseProjection.isOverBudget
+                          ? 'border-rose-200 dark:border-rose-800/80 bg-rose-50/80 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300'
+                          : 'border-amber-200 dark:border-amber-800/80 bg-amber-50/80 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300'
+                      }`}
+                    >
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>
+                        {quickExpenseProjection.isOverBudget
+                          ? t(
+                              lang,
+                              `चेतावनी: यो खर्च थप्दा ${formatMonthYear(quickExpenseProjection.targetYm, lang)} को खर्च ${quickExpenseProjection.pctText}% पुगी मासिक बजेट ${formatCurrency(quickExpenseProjection.diff, data.settings.currency)} ले नाघ्नेछ।`,
+                              `Alert: Saving this expense brings ${formatMonthYear(quickExpenseProjection.targetYm, lang)} spending to ${quickExpenseProjection.pctText}%, exceeding budget by ${formatCurrency(quickExpenseProjection.diff, data.settings.currency)}.`
+                            )
+                          : t(
+                              lang,
+                              `सावधानी: यो खर्च थप्दा ${formatMonthYear(quickExpenseProjection.targetYm, lang)} को बजेटको ${quickExpenseProjection.pctText}% प्रयोग हुनेछ (८०% सीमा पार)।`,
+                              `Warning: Saving this expense pushes ${formatMonthYear(quickExpenseProjection.targetYm, lang)} spending to ${quickExpenseProjection.pctText}% (exceeds 80% of budget).`
+                            )}
+                      </span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -307,6 +392,32 @@ export const GlobalOverlays: React.FC = () => {
                       </select>
                     </div>
                   </div>
+                  {quickCategoryProjection && (
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed tabular-nums ${
+                        quickCategoryProjection.isExceeded
+                          ? 'border-rose-200 dark:border-rose-800/80 bg-rose-50/80 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300'
+                          : 'border-amber-200 dark:border-amber-800/80 bg-amber-50/80 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300'
+                      }`}
+                    >
+                      <BellRing className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>
+                        {quickCategoryProjection.isExceeded
+                          ? t(
+                              lang,
+                              `विधा सीमा नाघ्यो (${FINANCE_CATEGORY_LABELS[quickCategoryProjection.category].ne}): यो खर्चपछि मासिक विधा खर्च ${quickCategoryProjection.pctText}% पुगी ${formatCurrency(quickCategoryProjection.diff, data.settings.currency)} ले सीमा नाघ्नेछ।`,
+                              `Category limit exceeded (${FINANCE_CATEGORY_LABELS[quickCategoryProjection.category].en}): Saving brings monthly category spend to ${quickCategoryProjection.pctText}%, ${formatCurrency(quickCategoryProjection.diff, data.settings.currency)} over limit.`
+                            )
+                          : t(
+                              lang,
+                              `विधा सीमा नजिक (${FINANCE_CATEGORY_LABELS[quickCategoryProjection.category].ne}): यो खर्चपछि मासिक विधा बजेटको ${quickCategoryProjection.pctText}% प्रयोग हुनेछ (${formatCurrency(quickCategoryProjection.diff, data.settings.currency)} बाँकी)।`,
+                              `Nearing ${FINANCE_CATEGORY_LABELS[quickCategoryProjection.category].en} limit: Saving brings monthly category spend to ${quickCategoryProjection.pctText}% (${formatCurrency(quickCategoryProjection.diff, data.settings.currency)} remaining).`
+                            )}
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
 

@@ -12,7 +12,22 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  body {
+    background-color: #fbf9f5;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(5, 150, 105, 0.07) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(225, 29, 72, 0.05) 0px, transparent 45%),
+      radial-gradient(at 60% 100%, rgba(245, 158, 11, 0.04) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
   .dark body {
+    background-color: #070c18;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.11) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(225, 29, 72, 0.08) 0px, transparent 45%),
+      radial-gradient(at 50% 100%, rgba(13, 148, 136, 0.07) 0px, transparent 50%);
+    background-attachment: fixed;
     letter-spacing: 0.005em;
   }
 }
@@ -21,12 +36,21 @@
   font-variant-numeric: tabular-nums;
 }
 
+.vibe-hero-surface {
+  background: linear-gradient(135deg, #0b192c 0%, #0d2b2e 52%, #134035 100%);
+}
+
+.dark .vibe-hero-surface {
+  background: linear-gradient(135deg, #0f172a 0%, #0c272b 52%, #10382f 100%);
+}
+
 @media print {
   .no-print {
     display: none !important;
   }
   body {
     background: #ffffff !important;
+    background-image: none !important;
     color: #0f172a !important;
   }
   .print-only {

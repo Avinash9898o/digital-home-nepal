@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Code2,
   Download,
   Edit2,
+  HelpCircle,
   Moon,
   RefreshCw,
   ShieldCheck,
+  Sparkles,
   Sun,
   Trash2,
   Upload,
@@ -12,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { useHome } from '../context/HomeContext';
+import { DEFAULT_DEVELOPER_NAME } from '../data/demoData';
 import { CURRENCY_META, t } from '../i18n/translations';
 import { CurrencyCode, FamilyMember, Language } from '../types';
 
@@ -20,6 +24,7 @@ const AVATAR_COLORS = ['#0F172A', '#059669', '#0284C7', '#BE123C', '#7C3AED', '#
 export const SettingsView: React.FC = () => {
   const {
     data,
+    setActiveSection,
     updateSettings,
     addMember,
     updateMember,
@@ -38,13 +43,21 @@ export const SettingsView: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [householdName, setHouseholdName] = useState(data.settings.householdName);
+  const [developerName, setDeveloperName] = useState(
+    data.settings.developerName || DEFAULT_DEVELOPER_NAME
+  );
   const [monthlyBudget, setMonthlyBudget] = useState(String(data.settings.monthlyBudget));
   const [importError, setImportError] = useState('');
 
   useEffect(() => {
     setHouseholdName(data.settings.householdName);
+    setDeveloperName(data.settings.developerName || DEFAULT_DEVELOPER_NAME);
     setMonthlyBudget(String(data.settings.monthlyBudget));
-  }, [data.settings.householdName, data.settings.monthlyBudget]);
+  }, [
+    data.settings.householdName,
+    data.settings.developerName,
+    data.settings.monthlyBudget,
+  ]);
 
   // Member Modal State
   const [memModalOpen, setMemModalOpen] = useState(false);
@@ -70,10 +83,11 @@ export const SettingsView: React.FC = () => {
     }
     updateSettings({
       householdName: householdName.trim(),
+      developerName: developerName.trim() || DEFAULT_DEVELOPER_NAME,
       monthlyBudget: num,
     });
     addToast(
-      t(lang, 'घर प्रोफाइल सुरक्षित गरियो।', 'Household profile saved.'),
+      t(lang, 'प्रोफाइल र डेभलपर विवरण सुरक्षित गरियो।', 'Household & developer profile saved.'),
       'success'
     );
   };
@@ -160,13 +174,17 @@ export const SettingsView: React.FC = () => {
         </p>
       </div>
 
-      {/* Household Name & Budget */}
+      {/* Household Name, Monthly Budget & Developer Name */}
       <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
         <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
-          {t(lang, 'घर / परिवारको विवरण', 'Household Details & Monthly Target')}
+          {t(
+            lang,
+            'घर / परिवारको विवरण र डेभलपरको नाम',
+            'Household Details & Developer Attribution'
+          )}
         </h3>
         <form onSubmit={handleSaveHouseholdProfile} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 {t(lang, 'परिवार / घरको नाम', 'Household Name')}
@@ -195,16 +213,61 @@ export const SettingsView: React.FC = () => {
                 className="w-full h-11 px-3.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-mono tabular-nums text-slate-900 dark:text-white"
               />
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                {t(lang, 'डेभलपरको नाम (Developer Name)', 'Developer Name')}
+              </label>
+              <input
+                type="text"
+                value={developerName}
+                onChange={(e) => setDeveloperName(e.target.value)}
+                placeholder={DEFAULT_DEVELOPER_NAME}
+                className="w-full h-11 px-3.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white"
+              />
+            </div>
           </div>
           <div className="flex justify-end">
             <button
               type="submit"
               className="min-h-[42px] px-5 py-2 rounded-lg bg-slate-900 dark:bg-emerald-600 hover:opacity-90 text-white text-xs sm:text-sm font-semibold cursor-pointer"
             >
-              {t(lang, 'विवरण सुरक्षित गर्नुहोस्', 'Save Household Settings')}
+              {t(lang, 'विवरण सुरक्षित गर्नुहोस्', 'Save Profile & Settings')}
             </button>
           </div>
         </form>
+      </section>
+
+      {/* Help & AI Assistance Card */}
+      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <HelpCircle className="w-5 h-5" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              {t(
+                lang,
+                'सहायता तथा स्मार्ट AI परामर्श (Help & AI Assistance)',
+                'Help & Smart AI Assistance'
+              )}
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              {t(
+                lang,
+                'एप चलाउने तरिका जान्न, रसिद स्क्यान र बजेट सीमा बुझ्न, वा घरायसी आर्थिक योजना बनाउन AI Assistance प्रयोग गर्नुहोस्।',
+                'Need help using features, receipt scanning, category limits, or planning your family budget? Ask AI Assistance anytime.'
+              )}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setActiveSection('assistant')}
+          className="min-h-[42px] px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs sm:text-sm font-semibold inline-flex items-center gap-2 whitespace-nowrap shrink-0 self-start sm:self-center cursor-pointer"
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>{t(lang, 'AI Assistance खोल्नुहोस्', 'Open AI Assistance')}</span>
+        </button>
       </section>
 
       {/* Preferences: Language, Currency, Theme */}
@@ -517,7 +580,7 @@ export const SettingsView: React.FC = () => {
       </section>
 
       {/* Local Storage & Privacy Transparency Card */}
-      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex items-start gap-3.5">
+      <section className="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-6 flex items-start gap-3.5">
         <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
         <div className="space-y-1 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
           <h4 className="font-bold text-slate-900 dark:text-white">
@@ -530,9 +593,16 @@ export const SettingsView: React.FC = () => {
           <p>
             {t(
               lang,
-              'Digital Home Nepal ले तपाईंको सबै घरायसी डाटा यही डिभाइस र ब्राउजरको localStorage मा सुरक्षित राख्छ। यो क्लाउड सिन्क्रोनाइजेसन होइन—तपाईंको पारिवारिक हिसाबकिताब कुनै बाह्य सर्भर वा तेस्रो पक्षमा कहिल्यै पठाइँदैन। ब्राउजरको क्यास/डाटा सफा गर्नुअघि माथिको JSON ब्याकअप डाउनलोड गरी सुरक्षित राख्नुहोला।',
-              'Digital Home Nepal stores all household records exclusively in this browser’s localStorage on your device. This is local device storage, not cloud synchronization—your family data is never sent to any external server. Please export a JSON backup periodically before clearing browser data.'
+              'Digital Home Nepal ले तपाईंको सबै घरायसी डाटा यही डिभाइस र ब्राउजरको localStorage मा सुरक्षित राख्छ। यो क्लाउड सिन्क्रोनाइजेसन होइन। तपाईंले स्मार्ट AI सहायक प्रयोग गर्दा र सहमति दिँदा मात्र संक्षिप्त सारांश AI विश्लेषणका लागि प्रयोग गरिन्छ। ब्राउजरको क्यास सफा गर्नुअघि JSON ब्याकअप डाउनलोड गरी सुरक्षित राख्नुहोला।',
+              'Digital Home Nepal stores all household records locally in this browser’s localStorage on your device (not cloud sync). A concise household summary is only sent when you actively use AI Assistance with context sharing enabled. Export a JSON backup periodically before clearing browser data.'
             )}
+          </p>
+          <p className="pt-2 flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-200">
+            <Code2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>
+              {t(lang, 'डेभलपर:', 'Developed by:')}{' '}
+              <strong>{data.settings.developerName || DEFAULT_DEVELOPER_NAME}</strong>
+            </span>
           </p>
         </div>
       </section>

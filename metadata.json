@@ -1,6 +1,6 @@
 {
   "name": "Digital Home Nepal",
   "description": "Smart Family. Smart Home. Better Living. All-in-one digital household finance, bills, shopping, tasks, calendar, and maintenance platform designed for Nepali families.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

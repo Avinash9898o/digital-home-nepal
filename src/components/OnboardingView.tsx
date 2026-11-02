@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import {
   Check,
+  Code2,
+  HelpCircle,
   Home,
   Moon,
   ShieldCheck,
@@ -10,11 +12,12 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useHome } from '../context/HomeContext';
+import { DEFAULT_DEVELOPER_NAME } from '../data/demoData';
 import { CURRENCY_META, t } from '../i18n/translations';
 import { CurrencyCode, Language } from '../types';
-import heroNepaliHome from '../assets/images/hero_nepali_home_1793615256246.jpg';
+import nepaliSmartHomeClear from '../assets/images/nepali_smart_home_clear_1793619332675.jpg';
 
-const HERO_IMAGE_SRC = heroNepaliHome;
+const HERO_IMAGE_SRC = nepaliSmartHomeClear;
 
 export const OnboardingView: React.FC = () => {
   const {
@@ -28,6 +31,9 @@ export const OnboardingView: React.FC = () => {
   const [currency, setCurrency] = useState<CurrencyCode>(data.settings.currency || 'NPR');
   const [householdName, setHouseholdName] = useState(
     lang === 'ne' ? 'शर्मा परिवार' : 'Sharma Family'
+  );
+  const [developerName, setDeveloperName] = useState(
+    data.settings.developerName || DEFAULT_DEVELOPER_NAME
   );
   const [monthlyBudget, setMonthlyBudget] = useState('85000');
   const [imgFailed, setImgFailed] = useState(false);
@@ -74,13 +80,25 @@ export const OnboardingView: React.FC = () => {
     e.preventDefault();
     const budget = parseValidatedBudget();
     if (budget === null) return;
-    completeOnboardingWithDemo(householdName.trim(), lang, currency, budget);
+    completeOnboardingWithDemo(
+      householdName.trim(),
+      lang,
+      currency,
+      budget,
+      developerName.trim() || DEFAULT_DEVELOPER_NAME
+    );
   };
 
   const onStartClean = () => {
     const budget = parseValidatedBudget();
     if (budget === null) return;
-    completeOnboardingClean(householdName.trim(), lang, currency, budget);
+    completeOnboardingClean(
+      householdName.trim(),
+      lang,
+      currency,
+      budget,
+      developerName.trim() || DEFAULT_DEVELOPER_NAME
+    );
   };
 
   return (
@@ -101,7 +119,7 @@ export const OnboardingView: React.FC = () => {
             <button
               type="button"
               onClick={() => handleLanguageSwitch('ne')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap min-h-[36px] ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap min-h-[36px] cursor-pointer ${
                 lang === 'ne'
                   ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -112,7 +130,7 @@ export const OnboardingView: React.FC = () => {
             <button
               type="button"
               onClick={() => handleLanguageSwitch('en')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap min-h-[36px] ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap min-h-[36px] cursor-pointer ${
                 lang === 'en'
                   ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -126,7 +144,7 @@ export const OnboardingView: React.FC = () => {
             type="button"
             onClick={toggleTheme}
             aria-label={t(lang, 'थिम परिवर्तन गर्नुहोस्', 'Toggle theme')}
-            className="min-h-[40px] min-w-[40px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            className="min-h-[40px] min-w-[40px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             {data.settings.theme === 'dark' ? (
               <Sun className="w-4 h-4" />
@@ -138,70 +156,72 @@ export const OnboardingView: React.FC = () => {
       </header>
 
       {/* Main Split Grid */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-8 flex items-center">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6 flex items-center">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          {/* Left Showcase Column */}
-          <div className="lg:col-span-7 relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 min-h-[340px] sm:min-h-[460px] flex flex-col justify-end">
-            {!imgFailed ? (
-              <img
-                src={HERO_IMAGE_SRC}
-                alt={t(
-                  lang,
-                  'आधुनिक नेपाली पारिवारिक घर र हिमाली दृश्य',
-                  'Warm modern Nepali family home terrace overlooking the Himalayas'
-                )}
-                referrerPolicy="no-referrer"
-                onError={() => setImgFailed(true)}
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-950 to-rose-950 flex items-center justify-center">
-                <Home className="w-20 h-20 text-white/20" />
-              </div>
-            )}
+          {/* Left Showcase Column: Crystal-Clear Unobstructed Image (Zero Overlay) + Clean Editorial Copy Below */}
+          <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-stone-200 dark:border-slate-800 flex flex-col justify-between shadow-2xs">
+            {/* Dedicated Clear Image Frame — NO dark tint, NO gradient overlay, NO text on top */}
+            <div className="w-full aspect-[16/9] overflow-hidden bg-stone-100 dark:bg-slate-800 border-b border-stone-200/80 dark:border-slate-800">
+              {!imgFailed ? (
+                <img
+                  src={HERO_IMAGE_SRC}
+                  alt={t(
+                    lang,
+                    'हिमाली दृश्यसहितको उज्यालो र सुन्दर नेपाली पारिवारिक घर',
+                    'Bright sunlit Nepali family home courtyard overlooking snow-capped Himalayan peaks'
+                  )}
+                  referrerPolicy="no-referrer"
+                  onError={() => setImgFailed(true)}
+                  className="w-full h-full object-cover object-center"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-emerald-800 via-teal-800 to-slate-900 flex items-center justify-center">
+                  <Home className="w-16 h-16 text-white/40" />
+                </div>
+              )}
+            </div>
 
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/55 to-slate-950/15" />
-
-            <div className="relative z-10 p-6 sm:p-10 text-white space-y-4">
-              <p className="text-xs sm:text-sm font-medium text-emerald-300 tracking-wide">
+            {/* Clean Editorial Copy Section Below Image */}
+            <div className="p-6 sm:p-8 space-y-4">
+              <p className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-400 tracking-wide">
                 {t(
                   lang,
                   'स्मार्ट परिवार · स्मार्ट घर · सुन्दर जीवन',
                   'Smart Family · Smart Home · Better Living'
                 )}
               </p>
-              <h1 className="text-2xl sm:text-4xl font-bold leading-tight max-w-xl [text-wrap:balance]">
+              <h1 className="text-2xl sm:text-3xl font-bold leading-tight text-slate-900 dark:text-white [text-wrap:balance]">
                 {t(
                   lang,
                   'नेपाली परिवारको दैनिक खर्च, बिल, किनमेल र घरायसी व्यवस्थापन एकै ठाउँमा।',
                   'Organize household finances, utility bills, shopping, chores, and family events in one calm workspace.'
                 )}
               </h1>
-              <p className="text-sm sm:text-base text-slate-200 max-w-xl leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                 {t(
                   lang,
-                  'बिजुली-पानीको बिलदेखि भान्साको किनमेल, बच्चाहरूको स्कूल शुल्क र घर मर्मतको सम्झनासम्म — सरल, सुरक्षित र पूर्ण रूपमा नेपाली तथा अंग्रेजी भाषामा।',
-                  'Built thoughtfully for Nepali households—track NEA & KUKL bills, monthly budgets, family tasks, and maintenance reminders with instant local privacy.'
+                  'बिजुली-पानीको बिलदेखि भान्साको किनमेल, रसिद स्क्यान, विधागत बजेट सूचना र स्मार्ट AI सहायतासम्म — पूर्ण रूपमा नेपाली तथा अंग्रेजी भाषामा।',
+                  'Built thoughtfully for Nepali households—track NEA & KUKL bills, scan receipts, monitor category budgets, and get instant Help via AI Assistance.'
                 )}
               </p>
 
-              <div className="pt-3 border-t border-white/15 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-200">
+              <div className="pt-4 border-t border-stone-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-medium text-slate-700 dark:text-slate-300">
                 <div className="flex items-center gap-2">
-                  <Wallet className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span>
-                    {t(lang, 'बजेट, बिल र खर्च ट्र्याकिङ', 'Budget, Bills & Ledger')}
+                    {t(lang, 'बजेट, बिल र रसिद स्क्यान', 'Budgets, Bills & Scan')}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <HelpCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>
+                    {t(lang, 'सहायता: स्मार्ट AI सहायक', 'Help: AI Assistance')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span>
                     {t(lang, 'परिवारका काम र क्यालेन्डर', 'Tasks & Family Calendar')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>
-                    {t(lang, '१००% लोकल डिभाइस स्टोरेज', '100% Private Local Storage')}
                   </span>
                 </div>
               </div>
@@ -209,8 +229,8 @@ export const OnboardingView: React.FC = () => {
           </div>
 
           {/* Right Setup Form Card */}
-          <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 flex flex-col justify-between">
-            <form onSubmit={onStartDemo} className="space-y-5">
+          <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-2xl border border-stone-200 dark:border-slate-800 p-6 sm:p-8 flex flex-col justify-between shadow-2xs">
+            <form onSubmit={onStartDemo} className="space-y-4">
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                   {t(lang, 'तपाईंको घर खाता सुरु गर्नुहोस्', 'Set Up Your Household')}
@@ -295,6 +315,23 @@ export const OnboardingView: React.FC = () => {
                 </div>
               </div>
 
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="onboard-developer-name"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                >
+                  {t(lang, 'डेभलपरको नाम (Developer Name)', 'Developer Name')}
+                </label>
+                <input
+                  id="onboard-developer-name"
+                  type="text"
+                  value={developerName}
+                  onChange={(e) => setDeveloperName(e.target.value)}
+                  placeholder={DEFAULT_DEVELOPER_NAME}
+                  className="w-full h-11 px-3.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
               <div className="pt-2 space-y-3">
                 <button
                   type="submit"
@@ -328,25 +365,49 @@ export const OnboardingView: React.FC = () => {
             </form>
 
             {/* Privacy Note */}
-            <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">
-                {t(
-                  lang,
-                  'गोपनीयता र लोकल स्टोरेज जानकारी',
-                  'Privacy & Local Device Storage'
-                )}
-              </p>
+            <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 leading-relaxed space-y-2">
+              <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>
+                  {t(
+                    lang,
+                    'गोपनीयता र लोकल स्टोरेज जानकारी',
+                    'Privacy & Local Device Storage'
+                  )}
+                </span>
+              </div>
               <p>
                 {t(
                   lang,
-                  'तपाईंका सबै पारिवारिक विवरणहरू यही डिभाइसको ब्राउजर (localStorage) मा मात्र सुरक्षित रहन्छन्। कुनै बाह्य सर्भरमा पठाइँदैन। नमुना डाटा जुनसुकै बेला एक क्लिकमा हटाउन सकिन्छ।',
-                  'All household records are stored locally in this browser (localStorage) and never transmitted externally. Demo data is clearly labeled and can be removed anytime in one click.'
+                  'तपाईंका सबै पारिवारिक विवरणहरू यही डिभाइसको ब्राउजर (localStorage) मा मात्र सुरक्षित रहन्छन्। सहायताका लागि भित्र AI Assistance उपलब्ध छ।',
+                  'All household records are stored locally in this browser (localStorage). Built-in AI Assistance is available anytime for Help.'
                 )}
               </p>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Onboarding Developer Attribution Bar */}
+      <footer className="w-full max-w-7xl mx-auto px-4 sm:px-8 py-4 border-t border-stone-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <span>
+          Digital Home Nepal ·{' '}
+          {t(
+            lang,
+            'स्मार्ट परिवार। स्मार्ट घर। सुन्दर जीवन।',
+            'Smart Family. Smart Home. Better Living.'
+          )}
+        </span>
+        <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
+          <Code2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>
+            {t(lang, 'डेभलपर:', 'Developer:')}{' '}
+            <strong className="text-slate-900 dark:text-white">
+              {developerName.trim() || DEFAULT_DEVELOPER_NAME}
+            </strong>
+          </span>
+        </span>
+      </footer>
     </div>
   );
 };
